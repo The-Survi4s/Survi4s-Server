@@ -1,0 +1,16 @@
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.exe
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.deps.json
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.runtimeconfig.json
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.runtimeconfig.dev.json
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.dll
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\ref\Survi4s-Server.dll
+D:\Unity_Project\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.pdb
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.csproj.AssemblyReference.cache
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.GeneratedMSBuildEditorConfig.editorconfig
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.AssemblyInfoInputs.cache
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.AssemblyInfo.cs
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.csproj.CoreCompileInputs.cache
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.dll
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\ref\Survi4s-Server.dll
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.pdb
+D:\Unity_Project\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.genruntimeconfig.cache
