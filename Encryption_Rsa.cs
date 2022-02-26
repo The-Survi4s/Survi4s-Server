@@ -13,7 +13,6 @@ namespace Survi4s_Server
     {
         // The key
         public RSAParameters serverPrivateKey { get; private set; }
-        public RSAParameters clientPublicKey { get; private set; }
         
         // Max byte size for encryption
         private static int MaxEncryptSize = 100;
@@ -99,11 +98,6 @@ namespace Survi4s_Server
             }
 
             return null;
-        }
-
-        public void SetClientPublicKey(string key)
-        {
-            clientPublicKey = ConvertStringToKey(key);
         }
 
         public string ConvertKeyToString(RSAParameters key)

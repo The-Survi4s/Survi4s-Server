@@ -9,8 +9,8 @@ namespace Survi4s_Server
     class Server
     {
         // List --------------------------------------------------------------------------
-        private List<Player> onlineList;
-        private List<Room> roomList;
+        public List<Player> onlineList { get; private set; }
+        public List<Room> roomList { get; private set; }
 
         // Variable ----------------------------------------------------------------------
         private int port = 3002;
@@ -56,10 +56,14 @@ namespace Survi4s_Server
                 TcpClient client = serverListener.AcceptTcpClient();
 
                 // Make a new class to handle client
-                Player player = new Player(client, onlineList, roomList);
+                Player player = new Player(client, this);
             }
         }
 
-
+        public static void CloseConnection(Player player)
+        {
+            player.networkStream.Close();
+            player = null;
+        }
     }
 }

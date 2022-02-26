@@ -9,27 +9,104 @@ namespace Survi4s_Server
 {
     class Player
     {
-        public string name { get; private set; }
-        public string id { get; private set; }
+        public string myName { get; private set; }
+        public string myId { get; private set; }
 
         public TcpClient tcp { get; private set; }
 
-        private List<Player> onlineList;
-        private List<Room> roomList;
+        private Server server;
 
-        public NetworkStream stream { get; private set; }
+        public NetworkStream networkStream { get; private set; }
         private Room myRoom;
         private bool isMaster;
         private bool isOnline;
 
         // Encryption
         private RsaEncryption rsaEncryption;
-        public AesEncryption aesEncryption { get; private set; }
 
         // Private key
-        private string ServerPrivateKey;
+        private string PrivateKeyFile = "Private-Key.txt";
 
-        public Player(TcpClient tcp, List<Player> onlineList, List<Room> roomList)
+        public Player(TcpClient tcp, Server server)
+        {
+            this.tcp = tcp;
+            this.server = server;
+
+            networkStream = tcp.GetStream();
+            isOnline = true;
+
+            rsaEncryption = new RsaEncryption(GetPrivateKey());
+
+            // Begin verification process --------------------------------------------
+             BeginVerification();
+        }
+
+        private string GetPrivateKey()
+        {
+            return File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), PrivateKeyFile));
+        }
+
+        private void BeginVerification()
+        {
+            // Wait to receive client ID + name -------------------------------------
+            BinaryFormatter formatter = new BinaryFormatter();
+            string answer = formatter.Deserialize(networkStream) as string;
+
+            // Try to decrypt it ----------------------------------------------------
+            string data = "";
+            data = rsaEncryption.Decrypt(answer, rsaEncryption.serverPrivateKey);
+
+            // If failed, close client connection ----------------------------------
+            if(data.Length == 0)
+            {
+                Server.CloseConnection(this);
+                return;
+            }
+
+            // If success, save the id and name -------------------------------------
+            myId = data.Substring(0, 6);
+            myName = data.Substring(6, (data.Length - 6));
+            Console.WriteLine(myId + " " + myName + " is Connected");
+
+            // Add this player to online list ---------------------------------------
+            server.onlineList.Add(this);
+
+            // Send feedback to client ----------------------------------------------
+            data = "Ok";
+            formatter.Serialize(networkStream, data);
+
+            // Begin listening to client --------------------------------------------
+            BeginNormalCommunication();
+        }
+
+        private void BeginNormalCommunication()
+        {
+            // Thread for receiving massage ----------------------------------------------
+            Thread recieveThread = new Thread(ReceivedMassage);
+
+            // Thread for checking connection --------------------------------------------
+            //Thread checkConnectionThread = new Thread(CheckConnection);
+
+            // Start all thread ----------------------------------------------------------
+            recieveThread.Start();
+            //checkConnectionThread.Start();
+        }
+
+        // Receive and proccess client massage here --------------------------------------
+        private void ReceivedMassage()
+        {
+            while (isOnline)
+            {
+                if (networkStream.DataAvailable)
+                {
+                    // Check massage here
+                    BinaryFormatter formatter = new BinaryFormatter();
+
+                }
+            }
+        }
+
+        private void SendMassage()
         {
 
         }
