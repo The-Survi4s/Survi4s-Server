@@ -21,12 +21,13 @@ namespace Survi4s_Server
         private bool isMaster;
         private bool isOnline;
 
-        // Encryption
+        // Encryption ---------------------------------------------------------------
         private RsaEncryption rsaEncryption;
 
-        // Private key
+        // Private key --------------------------------------------------------------
         private string PrivateKeyFile = "Private-Key.txt";
 
+        // Constructor --------------------------------------------------------------
         public Player(TcpClient tcp, Server server)
         {
             this.tcp = tcp;
@@ -95,19 +96,253 @@ namespace Survi4s_Server
         // Receive and proccess client massage here --------------------------------------
         private void ReceivedMassage()
         {
+            // Massage format : target|header|data|data|data...
+            // Target code : 1.All  2.Server  3.All except Sender  others:Specific player name
+
             while (isOnline)
             {
                 if (networkStream.DataAvailable)
                 {
-                    // Check massage here
+                    // Receive and split massage here ------------------------------------
                     BinaryFormatter formatter = new BinaryFormatter();
+                    string data = formatter.Deserialize(networkStream) as string;
+                    string[] info = data.Split("|");
+                    
+                    if(info[0] == "1")
+                    {
 
+                    }
+                    else if (info[0] == "2")
+                    {
+                        if(info[1] == "StMtc")
+                        {
+                            MatchMaking();
+                        }
+                        else if(info[1] == "CrR")
+                        {
+                            CreateRoom(info[2], int.Parse(info[3]), bool.Parse(info[4]));
+                        }
+                        else if (info[1] == "JnR")
+                        {
+                            JoinRoom(info[2]);
+                        }
+                    }
+                    else if (info[0] == "3")
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
                 }
             }
         }
 
-        private void SendMassage()
+        // Send Massage method ----------------------------------------------------------
+        private void SendMassage(string target, string massage)
         {
+            // Massage format : sender|header|data|data|data...
+            // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
+            string[] temp = new string[1];
+            temp[0] = massage;
+
+            SendMassage(target, temp);
+        }
+        private void SendMassage(string target, string[] massage)
+        {
+            // Massage format : sender|header|data|data|data...
+            // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
+
+            string data = myId+myName;
+            foreach(string x in massage)
+            {
+                data += "|" + x;
+            }
+
+            // Send massage according to target ---------------------------------------------
+            if(target == "1")
+            {
+                foreach(Player x in myRoom.players)
+                {
+                    SendSerializationDataHandler(x, data);
+                }
+            }
+            else if (target == "3")
+            {
+                foreach (Player x in myRoom.players)
+                {
+                    if(x.tcp != tcp)
+                    {
+                        SendSerializationDataHandler(x, data);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Player x in myRoom.players)
+                {
+                    if ((x.myId + x.myName) == (target))
+                    {
+                        SendSerializationDataHandler(x, data);
+                    }
+                }
+            }
+        }
+        private void SendMassage(string[] massage)
+        {
+            // Massage format : sender|header|data|data|data...
+
+            string data = "Svr";
+            foreach(string x in massage)
+            {
+                data += "|" + x;
+            }
+            SendSerializationDataHandler(this, data);
+        }
+
+        private void SendSerializationDataHandler(Player player, string Thedata)
+        {
+            // Try to send, if filed, let's just assume player disconnected ------------------
+            try
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(player.networkStream, Thedata);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Send massage error from " + player.myName + " : " + e.Message);
+                // Disconnect client from server
+                //DisconnectFromServer();
+            }
+        }
+
+        // Matchmaking method ------------------------------------------------------
+        private void MatchMaking()
+        {
+            // Check if there is room in list --------------------------------------
+            if (server.roomList.Count > 0)
+            {
+                for(int i = 0; i < server.roomList.Count; i++)
+                {
+                    // If we found the room ----------------------------------------
+                    if (server.roomList[i].CanJoinPublic())
+                    {
+                        server.onlineList.Remove(this);
+                        server.roomList[i].players.Add(this);
+
+                        myRoom = server.roomList[i];
+
+                        // Send massage to client that we got the room ------------
+                        string[] massage = new string[] { "RJnd", myRoom.roomName };
+                        SendMassage(massage);
+
+                        return;
+                    }
+                }
+            }
+
+            // Just make new room if there is no room can be joined ----------------
+            CreateRoom();
+        }
+
+        // Create Room method ------------------------------------------------------
+        private void CreateRoom()
+        {
+            // Default Room setting ------------------------------------------------
+            CreateRoom(myName + myId + "Room", 4, true);
+        }
+        private void CreateRoom(string roomName, int maxPlayer, bool isPublic)
+        {
+            // Create new class room -----------------------------------------------
+            Room temp = new Room(roomName, maxPlayer, isPublic);
+            server.roomList.Add(temp);
+            myRoom = temp;
+
+            // Remove player from online list --------------------------------------
+            server.onlineList.Remove(this);
+            myRoom.players.Add(this);
+
+            // Room creator is master of the room ----------------------------------
+            isMaster = true;
+
+            // Send massage to client that we create the room ----------------------
+            string[] massage = new string[] { "RCrd", myRoom.roomName };
+            SendMassage(massage);
+        }
+        
+        // Join Room method --------------------------------------------------------
+        private void JoinRoom(string roomName)
+        {
+            // Find the correct room name ------------------------------------------
+            foreach(Room x in server.roomList)
+            {
+                // Check if still can join -----------------------------------------
+                if(x.roomName == roomName && x.CanJoinPrivate())
+                {
+                    // Join  the room ----------------------------------------------
+                    server.onlineList.Remove(this);
+                    x.players.Add(this);
+                    myRoom = x;
+
+                    // Send massage to client that we has been joined to room ------
+                    string[] massage = new string[] { "RJnd", myRoom.roomName };
+                    SendMassage(massage);
+
+                    return;
+                }
+            }
+
+            // Send massage to client that no room can be joined -------------------
+
+        }
+
+        // Exit Room -------------------------------------------------------------
+        private void ExitRoom()
+        {
+            // Check if we are the master of room --------------------------------
+            if (isMaster)
+            {
+                foreach(Player x in myRoom.players)
+                {
+                    if(x.tcp != tcp)
+                    {
+                        x.SetToMaster();
+                        return;
+                    }
+                }
+            }
+
+            isMaster = false;
+            myRoom.players.Remove(this);
+            server.onlineList.Add(this);
+
+            // Check if we need to destroy the room ------------------------------
+            if(myRoom.players.Count == 0)
+            {
+                
+            }
+
+            myRoom = null;
+
+            // Send massage to client --------------------------------------------
+
+        }
+
+        // Sudden disconnect -----------------------------------------------------
+        private void SuddenDisconnect()
+        {
+            // Send massage to other client --------------------------------------
+
+            
+        }
+
+        // Set this player to master of room -------------------------------------
+        public void SetToMaster()
+        {
+            isMaster = true;
+
+            // Send massage to client --------------------------------------------
 
         }
     }
