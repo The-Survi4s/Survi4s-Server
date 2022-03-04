@@ -98,6 +98,7 @@ namespace Survi4s_Server
         {
             // Massage format : target|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender  others:Specific player name
+            // Massage code in : https://docs.google.com/spreadsheets/d/1vVT-tvdHMXsiBQaf16NSQZUbZoGLrR3Ub53RYXnhZtw/edit#gid=0
 
             while (isOnline)
             {
@@ -110,7 +111,8 @@ namespace Survi4s_Server
                     
                     if(info[0] == "1")
                     {
-
+                        // Send massage to all client in room ----------------------------
+                        SendMassage("1", data.Substring(2, (data.Length - 2))); //Console.WriteLine(data.Substring(1, (data.Length - 1)));
                     }
                     else if (info[0] == "2")
                     {
@@ -189,6 +191,11 @@ namespace Survi4s_Server
                 }
             }
         }
+        private void SendMassage(string massage)
+        {
+            string[] msg = new string[] { massage };
+            SendMassage(msg);
+        }
         private void SendMassage(string[] massage)
         {
             // Massage format : sender|header|data|data|data...
@@ -234,7 +241,7 @@ namespace Survi4s_Server
                         myRoom = server.roomList[i];
 
                         // Send massage to client that we got the room ------------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName };
+                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
                         SendMassage(massage);
 
                         return;
@@ -277,24 +284,35 @@ namespace Survi4s_Server
             // Find the correct room name ------------------------------------------
             foreach(Room x in server.roomList)
             {
-                // Check if still can join -----------------------------------------
-                if(x.roomName == roomName && x.CanJoinPrivate())
+                // Find The room ---------------------------------------------------
+                if(x.roomName == roomName)
                 {
-                    // Join  the room ----------------------------------------------
-                    server.onlineList.Remove(this);
-                    x.players.Add(this);
-                    myRoom = x;
+                    // Check if the room still can be joined ----------------------
+                    if (x.CanJoinPrivate())
+                    {
+                        // Join  the room ------------------------------------------
+                        server.onlineList.Remove(this);
+                        x.players.Add(this);
+                        myRoom = x;
 
-                    // Send massage to client that we has been joined to room ------
-                    string[] massage = new string[] { "RJnd", myRoom.roomName };
-                    SendMassage(massage);
+                        // Send massage to client that we has been joined to room ------
+                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
+                        SendMassage(massage);
 
-                    return;
+                        // Send massage to other client that we join the room ----------
+                        massage = new string[] { "PlCt", myRoom.players.Count.ToString() };
+                        SendMassage("3", massage);
+
+                        return;
+                    }
+
+                    // Send massage that the room is full ------------------------
+                    SendMassage("RsF");
                 }
             }
 
             // Send massage to client that no room can be joined -------------------
-
+            SendMassage("RnFd");
         }
 
         // Exit Room -------------------------------------------------------------
