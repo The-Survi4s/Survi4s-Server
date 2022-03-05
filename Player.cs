@@ -21,6 +21,10 @@ namespace Survi4s_Server
         private bool isMaster;
         private bool isOnline;
 
+        public enum PlayerState { online, room }
+
+        public PlayerState state { get; private set; }
+
         // Encryption ---------------------------------------------------------------
         private RsaEncryption rsaEncryption;
 
@@ -35,6 +39,8 @@ namespace Survi4s_Server
 
             networkStream = tcp.GetStream();
             isOnline = true;
+
+            state = PlayerState.online;
 
             rsaEncryption = new RsaEncryption(GetPrivateKey());
 
@@ -60,7 +66,7 @@ namespace Survi4s_Server
             // If failed, close client connection ----------------------------------
             if(data.Length == 0)
             {
-                Server.CloseConnection(this);
+                tcp.Close();
                 return;
             }
 
@@ -79,7 +85,6 @@ namespace Survi4s_Server
             // Begin listening to client --------------------------------------------
             BeginNormalCommunication();
         }
-
         private void BeginNormalCommunication()
         {
             // Thread for receiving massage ----------------------------------------------
@@ -112,21 +117,29 @@ namespace Survi4s_Server
                     if(info[0] == "1")
                     {
                         // Send massage to all client in room ----------------------------
-                        SendMassage("1", data.Substring(2, (data.Length - 2))); //Console.WriteLine(data.Substring(1, (data.Length - 1)));
+                        SendMassage("1", data.Substring(2, (data.Length - 2)));
                     }
                     else if (info[0] == "2")
                     {
-                        if(info[1] == "StMtc")
+                        if (info[1] == "StMtc")
                         {
                             MatchMaking();
                         }
-                        else if(info[1] == "CrR")
+                        else if (info[1] == "CrR")
                         {
                             CreateRoom(info[2], int.Parse(info[3]), bool.Parse(info[4]));
                         }
                         else if (info[1] == "JnR")
                         {
                             JoinRoom(info[2]);
+                        }
+                        else if (info[1] == "ExR")
+                        {
+                            ExitRoom();
+                        }
+                        else if (info[1] == "LcR")
+                        {
+                            myRoom.LockRoom();
                         }
                     }
                     else if (info[0] == "3")
@@ -210,7 +223,6 @@ namespace Survi4s_Server
 
         private void SendSerializationDataHandler(Player player, string Thedata)
         {
-            //Console.WriteLine(Thedata);
             // Try to send, if filed, let's just assume player disconnected ------------------
             try
             {
@@ -219,9 +231,9 @@ namespace Survi4s_Server
             }
             catch (Exception e)
             {
-                Console.WriteLine("Send massage error from " + player.myName + " : " + e.Message);
+                Console.WriteLine("Send massage error from " + player.myId + " " + player.myName + " : " + e.Message);
                 // Disconnect client from server
-                //DisconnectFromServer();
+                SuddenDisconnect();
             }
         }
 
@@ -244,6 +256,8 @@ namespace Survi4s_Server
                         // Send massage to client that we got the room ------------
                         string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
                         SendMassage(massage);
+
+                        state = PlayerState.room;
 
                         return;
                     }
@@ -277,6 +291,8 @@ namespace Survi4s_Server
             // Send massage to client that we create the room ----------------------
             string[] massage = new string[] { "RCrd", myRoom.roomName };
             SendMassage(massage);
+
+            state = PlayerState.room;
         }
         
         // Join Room method --------------------------------------------------------
@@ -304,6 +320,8 @@ namespace Survi4s_Server
                         massage = new string[] { "PlCt", myRoom.players.Count.ToString() };
                         SendMassage("3", massage);
 
+                        state = PlayerState.room;
+
                         return;
                     }
 
@@ -319,50 +337,67 @@ namespace Survi4s_Server
         // Exit Room -------------------------------------------------------------
         private void ExitRoom()
         {
-            // Check if we are the master of room --------------------------------
-            if (isMaster)
+            // Check there is other players in room ----------------------------------
+            if (myRoom.players.Count > 1)
             {
-                foreach(Player x in myRoom.players)
+                // Tell others that we left ------------------------------------------
+                SendMassage("3", "LRm");
+
+                // Check if we are the master of room --------------------------------
+                if (isMaster)
                 {
-                    if(x.tcp != tcp)
+                    // Set other player to master ------------------------------------
+                    foreach (Player x in myRoom.players)
                     {
-                        x.SetToMaster();
-                        return;
+                        if (x.tcp != tcp)
+                        {
+                            x.SetToMaster();
+                            return;
+                        }
                     }
                 }
+            }
+            else
+            {
+                server.roomList.Remove(myRoom);
             }
 
             isMaster = false;
             myRoom.players.Remove(this);
             server.onlineList.Add(this);
 
-            // Check if we need to destroy the room ------------------------------
-            if(myRoom.players.Count == 0)
-            {
-                
-            }
-
             myRoom = null;
+            state = PlayerState.online;
 
             // Send massage to client --------------------------------------------
-
+            SendMassage("REx");
         }
 
         // Sudden disconnect -----------------------------------------------------
         private void SuddenDisconnect()
         {
-            // Send massage to other client --------------------------------------
+            // Check client position
+            if (state == PlayerState.online)
+            {
+                // Remove from online list
+                server.onlineList.Remove(this);
+            }
+            else if (state == PlayerState.room)
+            {
+                // Remove from room list
+                myRoom.players.Remove(this);
 
-            
+                // Tell other player in room
+                SendMassage("3", "LRm");
+            }
         }
 
         // Set this player to master of room -------------------------------------
         public void SetToMaster()
         {
             isMaster = true;
-
             // Send massage to client --------------------------------------------
-
+            SendMassage("SeMs");
         }
     }
 }

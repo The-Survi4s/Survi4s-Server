@@ -59,11 +59,5 @@ namespace Survi4s_Server
                 Player player = new Player(client, this);
             }
         }
-
-        public static void CloseConnection(Player player)
-        {
-            player.networkStream.Close();
-            player = null;
-        }
     }
 }
