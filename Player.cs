@@ -210,6 +210,7 @@ namespace Survi4s_Server
 
         private void SendSerializationDataHandler(Player player, string Thedata)
         {
+            //Console.WriteLine(Thedata);
             // Try to send, if filed, let's just assume player disconnected ------------------
             try
             {

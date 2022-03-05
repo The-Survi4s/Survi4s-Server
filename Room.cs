@@ -24,7 +24,7 @@ namespace Survi4s_Server
         // Ask if room is avaliable to join --------------------------------------
         public bool CanJoinPublic()
         {
-            if(maxPlayer < players.Count && isPublic)
+            if(players.Count < maxPlayer && isPublic)
             {
                 return true;
             }
@@ -33,7 +33,7 @@ namespace Survi4s_Server
         }
         public bool CanJoinPrivate()
         {
-            if (maxPlayer < players.Count)
+            if (players.Count < maxPlayer)
             {
                 return true;
             }
