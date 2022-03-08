@@ -21,6 +21,9 @@ namespace Survi4s_Server
         private bool isMaster;
         private bool isOnline;
 
+        private int DefaultCheckTime;
+        private int checkTime;
+
         public enum PlayerState { online, room }
 
         public PlayerState state { get; private set; }
@@ -38,7 +41,9 @@ namespace Survi4s_Server
             this.server = server;
 
             networkStream = tcp.GetStream();
-            isOnline = true;
+
+            DefaultCheckTime = 1000;
+            checkTime = DefaultCheckTime;
 
             state = PlayerState.online;
 
@@ -73,10 +78,12 @@ namespace Survi4s_Server
             // If success, save the id and name -------------------------------------
             myId = data.Substring(0, 6);
             myName = data.Substring(6, (data.Length - 6));
-            Console.WriteLine(myId + " " + myName + " is Connected");
+            Console.WriteLine(myId + " " + myName + " Connected");
+            isOnline = true;
 
             // Add this player to online list ---------------------------------------
             server.onlineList.Add(this);
+            Console.WriteLine("Player Online : " + server.onlineList.Count);
 
             // Send feedback to client ----------------------------------------------
             data = "Ok";
@@ -90,12 +97,29 @@ namespace Survi4s_Server
             // Thread for receiving massage ----------------------------------------------
             Thread recieveThread = new Thread(ReceivedMassage);
 
-            // Thread for checking connection --------------------------------------------
-            //Thread checkConnectionThread = new Thread(CheckConnection);
+            // Check client online status ------------------------------------------------
+            Thread onlineStatus = new Thread(CheckOnlineStatus);
 
             // Start all thread ----------------------------------------------------------
             recieveThread.Start();
-            //checkConnectionThread.Start();
+            onlineStatus.Start();
+        }     
+
+        private void CheckOnlineStatus()
+        {
+            while (isOnline)
+            {
+                Thread.Sleep(DefaultCheckTime);
+                Console.WriteLine("Check Time " + checkTime);
+                if (checkTime == 0)
+                {
+                    SuddenDisconnect();
+                }
+                else
+                {
+                    checkTime = 0;
+                }
+            }
         }
 
         // Receive and proccess client massage here --------------------------------------
@@ -150,6 +174,8 @@ namespace Survi4s_Server
                     {
 
                     }
+
+                    checkTime = DefaultCheckTime;
                 }
             }
         }
@@ -376,19 +402,50 @@ namespace Survi4s_Server
         // Sudden disconnect -----------------------------------------------------
         private void SuddenDisconnect()
         {
+            isOnline = false;
+
             // Check client position
             if (state == PlayerState.online)
             {
                 // Remove from online list
                 server.onlineList.Remove(this);
+
+                // Print Massage
+                Console.WriteLine(myId + " " + myName + " Disconnected");
             }
             else if (state == PlayerState.room)
             {
-                // Remove from room list
-                myRoom.players.Remove(this);
+                // Check there is other players in room ----------------------------------
+                if (myRoom.players.Count > 1)
+                {
+                    // Tell others that we left ------------------------------------------
+                    SendMassage("3", "LRm");
 
-                // Tell other player in room
-                SendMassage("3", "LRm");
+                    // Check if we are the master of room --------------------------------
+                    if (isMaster)
+                    {
+                        // Set other player to master ------------------------------------
+                        foreach (Player x in myRoom.players)
+                        {
+                            if (x.tcp != tcp)
+                            {
+                                x.SetToMaster();
+                                return;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    server.roomList.Remove(myRoom);
+                }
+
+                isMaster = false;
+                myRoom.players.Remove(this);
+                myRoom = null;
+
+                // Print Massage
+                Console.WriteLine(myId + " " + myName + " Disconnected");
             }
         }
 
