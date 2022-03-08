@@ -42,7 +42,7 @@ namespace Survi4s_Server
 
             networkStream = tcp.GetStream();
 
-            DefaultCheckTime = 1000;
+            DefaultCheckTime = 5000;
             checkTime = DefaultCheckTime;
 
             state = PlayerState.online;
