@@ -110,7 +110,6 @@ namespace Survi4s_Server
             while (isOnline)
             {
                 Thread.Sleep(DefaultCheckTime);
-                Console.WriteLine("Check Time " + checkTime);
                 if (checkTime == 0)
                 {
                     SuddenDisconnect();
