@@ -13,7 +13,7 @@ namespace Survi4s_Server
         public List<Room> roomList { get; private set; }
 
         // Variable ----------------------------------------------------------------------
-        private int port = 3002;
+        private int port = 7777;
         private TcpListener serverListener;
         public bool IsOnline { get; private set; }
 
