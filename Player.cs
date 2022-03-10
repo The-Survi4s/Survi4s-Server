@@ -201,30 +201,33 @@ namespace Survi4s_Server
             }
 
             // Send massage according to target ---------------------------------------------
-            if(target == "1")
+            if(myRoom != null)
             {
-                foreach(Player x in myRoom.players)
+                if (target == "1")
                 {
-                    SendSerializationDataHandler(x, data);
-                }
-            }
-            else if (target == "3")
-            {
-                foreach (Player x in myRoom.players)
-                {
-                    if(x.tcp != tcp)
+                    foreach (Player x in myRoom.players)
                     {
                         SendSerializationDataHandler(x, data);
                     }
                 }
-            }
-            else
-            {
-                foreach (Player x in myRoom.players)
+                else if (target == "3")
                 {
-                    if ((x.myId + x.myName) == (target))
+                    foreach (Player x in myRoom.players)
                     {
-                        SendSerializationDataHandler(x, data);
+                        if (x.tcp != tcp)
+                        {
+                            SendSerializationDataHandler(x, data);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (Player x in myRoom.players)
+                    {
+                        if ((x.myId + x.myName) == (target))
+                        {
+                            SendSerializationDataHandler(x, data);
+                        }
                     }
                 }
             }
