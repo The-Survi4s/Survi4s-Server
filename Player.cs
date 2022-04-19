@@ -95,7 +95,7 @@ namespace Survi4s_Server
         private void BeginNormalCommunication()
         {
             // Thread for receiving massage ----------------------------------------------
-            Thread recieveThread = new Thread(ReceivedMassage);
+            Thread recieveThread = new Thread(ReceivedMessage);
 
             // Check client online status ------------------------------------------------
             Thread onlineStatus = new Thread(CheckOnlineStatus);
@@ -122,7 +122,7 @@ namespace Survi4s_Server
         }
 
         // Receive and proccess client massage here --------------------------------------
-        private void ReceivedMassage()
+        private void ReceivedMessage()
         {
             // Massage format : target|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender  others:Specific player name
@@ -140,7 +140,7 @@ namespace Survi4s_Server
                     if(info[0] == "1")
                     {
                         // Send massage to all client in room ----------------------------
-                        SendMassage("1", data.Substring(2, (data.Length - 2)));
+                        SendMessage("1", data.Substring(2, (data.Length - 2)));
                     }
                     else if (info[0] == "2")
                     {
@@ -171,7 +171,16 @@ namespace Survi4s_Server
                     }
                     else
                     {
+                        if (myRoom == null)
+                            return;
 
+                        foreach(Player x in myRoom.players)
+                        {
+                            if(x.myName == info[0])
+                            {
+                                x.SendMessage(data);
+                            }    
+                        }
                     }
 
                     checkTime = DefaultCheckTime;
@@ -180,16 +189,16 @@ namespace Survi4s_Server
         }
 
         // Send Massage method ----------------------------------------------------------
-        private void SendMassage(string target, string massage)
+        private void SendMessage(string target, string massage)
         {
             // Massage format : sender|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
             string[] temp = new string[1];
             temp[0] = massage;
 
-            SendMassage(target, temp);
+            SendMessage(target, temp);
         }
-        private void SendMassage(string target, string[] massage)
+        private void SendMessage(string target, string[] massage)
         {
             // Massage format : sender|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
@@ -232,12 +241,12 @@ namespace Survi4s_Server
                 }
             }
         }
-        private void SendMassage(string massage)
+        private void SendMessage(string massage)
         {
             string[] msg = new string[] { massage };
-            SendMassage(msg);
+            SendMessage(msg);
         }
-        private void SendMassage(string[] massage)
+        private void SendMessage(string[] massage)
         {
             // Massage format : sender|header|data|data|data...
 
@@ -283,7 +292,7 @@ namespace Survi4s_Server
 
                         // Send massage to client that we got the room ------------
                         string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
-                        SendMassage(massage);
+                        SendMessage(massage);
 
                         state = PlayerState.room;
 
@@ -318,7 +327,7 @@ namespace Survi4s_Server
 
             // Send massage to client that we create the room ----------------------
             string[] massage = new string[] { "RCrd", myRoom.roomName };
-            SendMassage(massage);
+            SendMessage(massage);
 
             state = PlayerState.room;
         }
@@ -342,11 +351,11 @@ namespace Survi4s_Server
 
                         // Send massage to client that we has been joined to room ------
                         string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
-                        SendMassage(massage);
+                        SendMessage(massage);
 
                         // Send massage to other client that we join the room ----------
                         massage = new string[] { "PlCt", myRoom.players.Count.ToString() };
-                        SendMassage("3", massage);
+                        SendMessage("3", massage);
 
                         state = PlayerState.room;
 
@@ -354,12 +363,12 @@ namespace Survi4s_Server
                     }
 
                     // Send massage that the room is full ------------------------
-                    SendMassage("RsF");
+                    SendMessage("RsF");
                 }
             }
 
             // Send massage to client that no room can be joined -------------------
-            SendMassage("RnFd");
+            SendMessage("RnFd");
         }
 
         // Exit Room -------------------------------------------------------------
@@ -369,7 +378,7 @@ namespace Survi4s_Server
             if (myRoom.players.Count > 1)
             {
                 // Tell others that we left ------------------------------------------
-                SendMassage("3", "LRm");
+                SendMessage("3", "LRm");
 
                 // Check if we are the master of room --------------------------------
                 if (isMaster)
@@ -398,7 +407,7 @@ namespace Survi4s_Server
             state = PlayerState.online;
 
             // Send massage to client --------------------------------------------
-            SendMassage("REx");
+            SendMessage("REx");
         }
 
         // Sudden disconnect -----------------------------------------------------
@@ -421,7 +430,7 @@ namespace Survi4s_Server
                 if (myRoom.players.Count > 1)
                 {
                     // Tell others that we left ------------------------------------------
-                    SendMassage("3", "LRm");
+                    SendMessage("3", "LRm");
 
                     // Check if we are the master of room --------------------------------
                     if (isMaster)
@@ -456,7 +465,7 @@ namespace Survi4s_Server
         {
             isMaster = true;
             // Send massage to client --------------------------------------------
-            SendMassage("SeMs");
+            SendMessage("SeMs");
         }
     }
 }
