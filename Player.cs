@@ -291,8 +291,18 @@ namespace Survi4s_Server
                         myRoom = server.roomList[i];
 
                         // Send massage to client that we got the room ------------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
+                        string[] massage = new string[] { "RJnd", myRoom.roomName };
                         SendMessage(massage);
+
+                        // Send massage to other client that we join the room ----------
+                        // + Send all player in room name ------------------------------
+                        string msg = myRoom.players.Count.ToString();
+                        foreach (Player alpha in myRoom.players)
+                        {
+                            msg += "|" + alpha.myName;
+                        }
+                        massage = new string[] { "PlCt", msg };
+                        SendMessage("1", massage);
 
                         state = PlayerState.room;
 
@@ -330,6 +340,9 @@ namespace Survi4s_Server
             SendMessage(massage);
 
             state = PlayerState.room;
+
+            // Debugging
+            Console.WriteLine("Room " + roomName + " created!");
         }
         
         // Join Room method --------------------------------------------------------
@@ -350,14 +363,23 @@ namespace Survi4s_Server
                         myRoom = x;
 
                         // Send massage to client that we has been joined to room ------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
+                        string[] massage = new string[] { "RJnd", myRoom.roomName };
                         SendMessage(massage);
 
                         // Send massage to other client that we join the room ----------
-                        massage = new string[] { "PlCt", myRoom.players.Count.ToString() };
-                        SendMessage("3", massage);
+                        // + Send all player in room name ------------------------------
+                        string msg = myRoom.players.Count.ToString();
+                        foreach(Player alpha in myRoom.players)
+                        {
+                            msg += "|" + alpha.myName;
+                        }
+                        massage = new string[] { "PlCt", msg };
+                        SendMessage("1", massage);
 
                         state = PlayerState.room;
+
+                        // Debugging
+                        Console.WriteLine(myName + " joined room " + roomName);
 
                         return;
                     }
