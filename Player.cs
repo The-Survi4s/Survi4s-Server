@@ -164,6 +164,10 @@ namespace Survi4s_Server
                         {
                             myRoom.LockRoom();
                         }
+                        else if (info[1] == "ChNm")
+                        {
+                            ChangeName(info[2], info[3]);
+                        }
                     }
                     else if (info[0] == "3")
                     {
@@ -430,6 +434,14 @@ namespace Survi4s_Server
 
             // Send massage to client --------------------------------------------
             SendMessage("REx");
+        }
+
+        private void ChangeName(string Id, string Name)
+        {
+            myId = Id;
+            myName = Name;
+            string[] msg = { "ChNm", Id, Name };
+            SendMessage(msg);
         }
 
         // Sudden disconnect -----------------------------------------------------
