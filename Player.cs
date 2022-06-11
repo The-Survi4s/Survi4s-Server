@@ -304,7 +304,8 @@ namespace Survi4s_Server
                         myRoom = server.roomList[i];
 
                         // Send massage to client that we got the room ------------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName };
+                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
+
                         SendMessage(massage);
 
                         // Send massage to other client that we join the room ----------
@@ -376,7 +377,7 @@ namespace Survi4s_Server
                         myRoom = x;
 
                         // Send massage to client that we has been joined to room ------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName };
+                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
                         SendMessage(massage);
 
                         // Send massage to other client that we join the room ----------
