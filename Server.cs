@@ -59,5 +59,58 @@ namespace Survi4s_Server
                 Player player = new Player(client, this);
             }
         }
+
+
+        // Sudden disconnect -----------------------------------------------------
+        public void SuddenDisconnect(Player player)
+        {
+            player.isOnline = false;
+
+            // Check client position
+            if (player.state == Player.PlayerState.online)
+            {
+                // Remove from online list
+                onlineList.Remove(player);
+
+                // Print Massage
+                Console.WriteLine(player.myId + " " + player.myName + " Disconnected");
+            }
+            else if (player.state == Player.PlayerState.room)
+            {
+                // Check there is other players in room ----------------------------------
+                if (player.myRoom.players.Count > 1)
+                {
+                    // Tell others that we left ------------------------------------------
+                    player.SendMessage("3", "LRm");
+
+                    // Check if we are the master of room --------------------------------
+                    if (player.isMaster)
+                    {
+                        // Set other player to master ------------------------------------
+                        foreach (Player x in player.myRoom.players)
+                        {
+                            if (x.tcp != player.tcp)
+                            {
+                                x.SetToMaster();
+                                return;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    roomList.Remove(player.myRoom);
+                }
+
+                player.tcp.Close();
+
+                player.isMaster = false;
+                player.myRoom.players.Remove(player);
+                player.myRoom = null;
+
+                // Print Massage
+                Console.WriteLine(player.myId + " " + player.myName + " Disconnected");
+            }
+        }
     }
 }
