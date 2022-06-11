@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Linq;
 
 namespace Survi4s_Server
 {
@@ -65,8 +66,7 @@ namespace Survi4s_Server
             string answer = formatter.Deserialize(networkStream) as string;
 
             // Try to decrypt it ----------------------------------------------------
-            string data = "";
-            data = rsaEncryption.Decrypt(answer, rsaEncryption.serverPrivateKey);
+            string data = rsaEncryption.Decrypt(answer, rsaEncryption.serverPrivateKey);
 
             // If failed, close client connection ----------------------------------
             if(data.Length == 0)
@@ -77,7 +77,7 @@ namespace Survi4s_Server
 
             // If success, save the id and name -------------------------------------
             myId = data.Substring(0, 6);
-            myName = data.Substring(6, (data.Length - 6));
+            myName = data[6..];
             Console.WriteLine(myId + " " + myName + " Connected");
             isOnline = true;
 
@@ -95,10 +95,10 @@ namespace Survi4s_Server
         private void BeginNormalCommunication()
         {
             // Thread for receiving massage ----------------------------------------------
-            Thread recieveThread = new Thread(ReceivedMessage);
+            Thread recieveThread = new(ReceivedMessage);
 
             // Check client online status ------------------------------------------------
-            Thread onlineStatus = new Thread(CheckOnlineStatus);
+            Thread onlineStatus = new(CheckOnlineStatus);
 
             // Start all thread ----------------------------------------------------------
             recieveThread.Start();
@@ -140,7 +140,7 @@ namespace Survi4s_Server
                     if(info[0] == "1")
                     {
                         // Send massage to all client in room ----------------------------
-                        SendMessage("1", data.Substring(2, (data.Length - 2)));
+                        SendMessage("1", data[2..]);
                     }
                     else if (info[0] == "2")
                     {
@@ -171,15 +171,11 @@ namespace Survi4s_Server
                     }
                     else if (info[0] == "3")
                     {
-                        if (myRoom == null)
-                            return;
+                        if (myRoom == null) return;
 
-                        foreach (Player x in myRoom.players)
+                        foreach (Player x in myRoom.players.Where(x => x.tcp != tcp))
                         {
-                            if (x.tcp != tcp)
-                            {
-                                x.SendMessage(data);
-                            }
+                            x.SendMessage(data);
                         }
                     }
                     else
@@ -187,12 +183,9 @@ namespace Survi4s_Server
                         if (myRoom == null)
                             return;
 
-                        foreach(Player x in myRoom.players)
+                        foreach(Player x in myRoom.players.Where(x => x.myName == info[0]))
                         {
-                            if(x.myName == info[0])
-                            {
-                                x.SendMessage(data);
-                            }    
+                            x.SendMessage(data);
                         }
                     }
 
@@ -338,7 +331,7 @@ namespace Survi4s_Server
         private void CreateRoom(string roomName, int maxPlayer, bool isPublic)
         {
             // Create new class room -----------------------------------------------
-            Room temp = new Room(roomName, maxPlayer, isPublic);
+            Room temp = new(roomName, maxPlayer, isPublic);
             server.roomList.Add(temp);
             myRoom = temp;
 
