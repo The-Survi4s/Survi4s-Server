@@ -1,0 +1,17 @@
+ssh -i KeyOren.pem debian@103.150.99.101
+git pull
+git clone
+rm - rf -> Delete
+cd -> Open file
+ls -> See files
+dotnet run -> Run apk
+dotnet build -> Build apk
+
+Asyncronus -> server
+Stop running : Ctrl + C
+Run program in folder bin using ./Survi4s-Server
+Check execute : ls -l
+
+ssh -i KeyOren.pem debian@103.150.99.101
+cd Survi4s-Server/bin/Debug/net5.0/
+./Survi4s-Server

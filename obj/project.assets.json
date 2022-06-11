@@ -8,20 +8,28 @@
     "net5.0": []
   },
   "packageFolders": {
-    "C:\\Users\\PAVILION GAMING\\.nuget\\packages\\": {}
+    "C:\\Users\\Linux Family\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {},
+    "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Unity_Project\\Survi4s-Server\\Survi4s-Server.csproj",
+      "projectUniqueName": "C:\\Users\\Linux Family\\Documents\\GitHub\\Survi4s-Server\\Survi4s-Server.csproj",
       "projectName": "Survi4s-Server",
-      "projectPath": "D:\\Unity_Project\\Survi4s-Server\\Survi4s-Server.csproj",
-      "packagesPath": "C:\\Users\\PAVILION GAMING\\.nuget\\packages\\",
-      "outputPath": "D:\\Unity_Project\\Survi4s-Server\\obj\\",
+      "projectPath": "C:\\Users\\Linux Family\\Documents\\GitHub\\Survi4s-Server\\Survi4s-Server.csproj",
+      "packagesPath": "C:\\Users\\Linux Family\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Linux Family\\Documents\\GitHub\\Survi4s-Server\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+        "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\"
+      ],
       "configFilePaths": [
-        "C:\\Users\\PAVILION GAMING\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\Linux Family\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net5.0"
@@ -60,7 +68,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.408\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.406\\RuntimeIdentifierGraph.json"
       }
     }
   }

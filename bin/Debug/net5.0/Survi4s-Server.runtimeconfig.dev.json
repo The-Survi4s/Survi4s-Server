@@ -1,8 +1,10 @@
 {
   "runtimeOptions": {
     "additionalProbingPaths": [
-      "C:\\Users\\PAVILION GAMING\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\PAVILION GAMING\\.nuget\\packages"
+      "C:\\Users\\Linux Family\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\Linux Family\\.nuget\\packages",
+      "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+      "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet"
     ]
   }
 }
