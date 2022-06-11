@@ -76,7 +76,7 @@ namespace Survi4s_Server
             }
 
             // If success, save the id and name -------------------------------------
-            myId = data.Substring(0, 6);
+            myId = data[..6];
             myName = data[6..];
             Console.WriteLine(myId + " " + myName + " Connected");
             isOnline = true;
@@ -94,7 +94,7 @@ namespace Survi4s_Server
         }
         private void BeginNormalCommunication()
         {
-            // Thread for receiving massage ----------------------------------------------
+            // Thread for receiving message ----------------------------------------------
             Thread recieveThread = new(ReceivedMessage);
 
             // Check client online status ------------------------------------------------
@@ -121,111 +121,124 @@ namespace Survi4s_Server
             }
         }
 
-        // Receive and proccess client massage here --------------------------------------
+        // Receive and proccess client message here --------------------------------------
         private void ReceivedMessage()
         {
-            // Massage format : target|header|data|data|data...
+            // Message format : target|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender  others:Specific player name
-            // Massage code in : https://docs.google.com/spreadsheets/d/1vVT-tvdHMXsiBQaf16NSQZUbZoGLrR3Ub53RYXnhZtw/edit#gid=0
+            // Message code in : https://docs.google.com/spreadsheets/d/1vVT-tvdHMXsiBQaf16NSQZUbZoGLrR3Ub53RYXnhZtw/edit#gid=0
 
             while (isOnline)
             {
                 if (networkStream.DataAvailable)
                 {
-                    // Receive and split massage here ------------------------------------
+                    // Receive and split message here ------------------------------------
                     BinaryFormatter formatter = new BinaryFormatter();
                     string data = formatter.Deserialize(networkStream) as string;
                     string[] info = data.Split("|");
-                    
-                    if(info[0] == "1")
+                    if (info[1] == "A")
                     {
-                        // Send massage to all client in room ----------------------------
-                        SendMessage("1", data[2..]);
+                        checkTime = DefaultCheckTime;
+                        continue;
                     }
-                    else if (info[0] == "2")
+                    switch (EnumParse<Recipient>(info[0]))
                     {
-                        if (info[1] == "StMtc")
-                        {
-                            MatchMaking();
-                        }
-                        else if (info[1] == "CrR")
-                        {
-                            CreateRoom(info[2], int.Parse(info[3]), bool.Parse(info[4]));
-                        }
-                        else if (info[1] == "JnR")
-                        {
-                            JoinRoom(info[2]);
-                        }
-                        else if (info[1] == "ExR")
-                        {
-                            ExitRoom();
-                        }
-                        else if (info[1] == "LcR")
-                        {
-                            myRoom.LockRoom();
-                        }
-                        else if (info[1] == "ChNm")
-                        {
-                            ChangeName(info[2], info[3]);
-                        }
+                        case Recipient.All:
+                            // Send message to all client in room ----------------------------
+                            SendMessage(Recipient.All, data[2..]);
+                            break;
+                        case Recipient.Server:
+                            switch (EnumParse<Subject>(info[1]))
+                            {
+                                case Subject.StMtc:
+                                    MatchMaking();
+                                    break;
+                                case Subject.CrR:
+                                    CreateRoom(info[2], int.Parse(info[3]), bool.Parse(info[4]));
+                                    break;
+                                case Subject.JnR:
+                                    JoinRoom(info[2]);
+                                    break;
+                                case Subject.ExR:
+                                    ExitRoom();
+                                    break;
+                                case Subject.LcR:
+                                    myRoom.LockRoom();
+                                    break;
+                                case Subject.ChNm:
+                                    ChangeName(info[2], info[3]);
+                                    break;
+                            }
+                            break;
+                        case Recipient.AllExceptSender:
+                            {
+                                if (myRoom == null) return;
+                                foreach (Player x in myRoom.players.Where(x => x.tcp != tcp))
+                                {
+                                    x.SendMessage(info);
+                                }
+                                break;
+                            }
+                        default:
+                            {
+                                if (myRoom == null) return;
+                                foreach (Player x in myRoom.players.Where(x => x.myName == info[0]))
+                                {
+                                    x.SendMessage(info);
+                                }
+                                break;
+                            }
                     }
-                    else if (info[0] == "3")
-                    {
-                        if (myRoom == null) return;
-
-                        foreach (Player x in myRoom.players.Where(x => x.tcp != tcp))
-                        {
-                            x.SendMessage(data);
-                        }
-                    }
-                    else
-                    {
-                        if (myRoom == null)
-                            return;
-
-                        foreach(Player x in myRoom.players.Where(x => x.myName == info[0]))
-                        {
-                            x.SendMessage(data);
-                        }
-                    }
-
                     checkTime = DefaultCheckTime;
                 }
             }
         }
 
-        // Send Massage method ----------------------------------------------------------
-        public void SendMessage(string target, string massage)
+        // Send Message method ----------------------------------------------------------
+        /// <summary>
+        /// Sends message from server to this player
+        /// </summary>
+        /// <param name="message"></param>
+        private void SendMessage(params string[] message)
         {
-            // Massage format : sender|header|data|data|data...
-            // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
-            string[] temp = new string[1];
-            temp[0] = massage;
+            // Message format : sender|header|data|data|data...
 
-            SendMessage(target, temp);
+            string data = Subject.Svr.ToString();
+            foreach (string x in message)
+            {
+                data += "|" + x;
+            }
+            
+            SendSerializationDataHandler(this, data);
         }
-        private void SendMessage(string target, string[] massage)
+
+        /// <summary>
+        /// Pass message from this player to other recipients
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="message"></param>
+        private void SendMessage(string target, params string[] message)
         {
-            // Massage format : sender|header|data|data|data...
+            // Message format : sender|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
 
             string data = myId+myName;
-            foreach(string x in massage)
+            foreach(string x in message)
             {
                 data += "|" + x;
             }
 
-            // Send massage according to target ---------------------------------------------
+            // Send message according to target ---------------------------------------------
             if(myRoom != null)
             {
-                if (target == "1")
+                if (target == Num(Recipient.All))
                 {
                     foreach (Player x in myRoom.players)
                     {
                         SendSerializationDataHandler(x, data);
                     }
                 }
-                else if (target == "3")
+                else if (target == Num(Recipient.AllExceptSender))
                 {
                     foreach (Player x in myRoom.players)
                     {
@@ -247,34 +260,73 @@ namespace Survi4s_Server
                 }
             }
         }
-        private void SendMessage(string massage)
-        {
-            string[] msg = new string[] { massage };
-            SendMessage(msg);
-        }
-        private void SendMessage(string[] massage)
-        {
-            // Massage format : sender|header|data|data|data...
 
-            string data = "Svr";
-            foreach(string x in massage)
-            {
-                data += "|" + x;
-            }
-            SendSerializationDataHandler(this, data);
+        /// <summary>
+        /// Pass message from this player to other recipients
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        public void SendMessage(Recipient receiver, params string[] message)
+        {
+            SendMessage(Num(receiver), message);
         }
 
-        private void SendSerializationDataHandler(Player player, string Thedata)
+        /// <summary>
+        /// Pass message from this player to other recipients
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        public void SendMessage(Recipient receiver, Subject subject, params string[] body)
         {
-            // Try to send, if filed, let's just assume player disconnected ------------------
+            List<string> msg = new() { subject.ToString() };
+            msg.AddRange(body);
+            SendMessage(Num(receiver), msg.ToArray());
+        }
+
+        /// <summary>
+        /// Pass message from this player to other recipients
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="subject"></param>
+        public void SendMessage(Recipient receiver, Subject subject)
+        {
+            SendMessage(Num(receiver), subject.ToString());
+        }
+
+        /// <summary>
+        /// Sends message from server to this player
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        private void SendMessage(Subject subject, params string[] body)
+        {
+            List<string> msg = new() { subject.ToString() };
+            msg.AddRange(body);
+            SendMessage(msg.ToArray());
+        }
+
+        /// <summary>
+        /// Sends message from server to this player
+        /// </summary>
+        /// <param name="subject"></param>
+        private void SendMessage(Subject subject)
+        {
+            SendMessage(new string[] { subject.ToString() });
+        }
+
+        private void SendSerializationDataHandler(Player player, string data)
+        {
+            // Try to send, if fails, let's just assume player disconnected ------------------
             try
             {
+                //Console.WriteLine("Send:" + data);
                 BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(player.networkStream, Thedata);
+                formatter.Serialize(player.networkStream, data);
             }
             catch (Exception e)
             {
-                Console.WriteLine("Send massage error from " + player.myId + " " + player.myName + " : " + e.Message);
+                Console.WriteLine("Send message error from " + player.myId + " " + player.myName + " : " + e.Message);
                 // Disconnect client from server
                 server.SuddenDisconnect(this);
             }
@@ -296,20 +348,17 @@ namespace Survi4s_Server
 
                         myRoom = server.roomList[i];
 
-                        // Send massage to client that we got the room ------------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
+                        // Send message to client that we got the room ------------
+                        SendMessage(Subject.RJnd, myRoom.roomName, myRoom.players.Count.ToString());
 
-                        SendMessage(massage);
-
-                        // Send massage to other client that we join the room ----------
+                        // Send message to other client that we join the room ----------
                         // + Send all player in room name ------------------------------
                         string msg = myRoom.players.Count.ToString();
                         foreach (Player alpha in myRoom.players)
                         {
                             msg += "|" + alpha.myName;
                         }
-                        massage = new string[] { "PlCt", msg };
-                        SendMessage("1", massage);
+                        SendMessage(Recipient.All, Subject.PlCt, msg);
 
                         state = PlayerState.room;
 
@@ -342,9 +391,8 @@ namespace Survi4s_Server
             // Room creator is master of the room ----------------------------------
             isMaster = true;
 
-            // Send massage to client that we create the room ----------------------
-            string[] massage = new string[] { "RCrd", myRoom.roomName };
-            SendMessage(massage);
+            // Send message to client that we create the room ----------------------
+            SendMessage(Subject.RCrd, myRoom.roomName);
 
             state = PlayerState.room;
 
@@ -369,19 +417,17 @@ namespace Survi4s_Server
                         x.players.Add(this);
                         myRoom = x;
 
-                        // Send massage to client that we has been joined to room ------
-                        string[] massage = new string[] { "RJnd", myRoom.roomName, myRoom.players.Count.ToString() };
-                        SendMessage(massage);
+                        // Send message to client that we have joined to room ------
+                        SendMessage(Subject.RJnd, myRoom.roomName, myRoom.players.Count.ToString());
 
-                        // Send massage to other client that we join the room ----------
+                        // Send message to other client that we join the room ----------
                         // + Send all player in room name ------------------------------
                         string msg = myRoom.players.Count.ToString();
                         foreach(Player alpha in myRoom.players)
                         {
                             msg += "|" + alpha.myName;
                         }
-                        massage = new string[] { "PlCt", msg };
-                        SendMessage("1", massage);
+                        SendMessage(Recipient.All, Subject.PlCt, msg);
 
                         state = PlayerState.room;
 
@@ -391,13 +437,13 @@ namespace Survi4s_Server
                         return;
                     }
 
-                    // Send massage that the room is full ------------------------
-                    SendMessage("RsF");
+                    // Send message that the room is full ------------------------
+                    SendMessage(Subject.RsF);
                 }
             }
 
-            // Send massage to client that no room can be joined -------------------
-            SendMessage("RnFd");
+            // Send message to client that no room can be joined -------------------
+            SendMessage(Subject.RnFd);
         }
 
         // Exit Room -------------------------------------------------------------
@@ -407,7 +453,7 @@ namespace Survi4s_Server
             if (myRoom.players.Count > 1)
             {
                 // Tell others that we left ------------------------------------------
-                SendMessage("3", "LRm");
+                SendMessage(Recipient.AllExceptSender, Subject.LRm);
 
                 // Check if we are the master of room --------------------------------
                 if (isMaster)
@@ -435,24 +481,36 @@ namespace Survi4s_Server
             myRoom = null;
             state = PlayerState.online;
 
-            // Send massage to client --------------------------------------------
-            SendMessage("REx");
+            // Send message to client --------------------------------------------
+            SendMessage(Subject.REx);
         }
 
         private void ChangeName(string Id, string Name)
         {
             myId = Id;
             myName = Name;
-            string[] msg = { "ChNm", Id, Name };
-            SendMessage(msg);
+            SendMessage(Subject.ChNm, Id, Name);
         }
 
         // Set this player to master of room -------------------------------------
         public void SetToMaster()
         {
             isMaster = true;
-            // Send massage to client --------------------------------------------
-            SendMessage("SeMs");
+            // Send message to client --------------------------------------------
+            SendMessage(Subject.SeMs);
         }
+
+        /// <summary>
+        /// Parses a string to an enum of type <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T">The enum type</typeparam>
+        /// <param name="stringToEnum">the string to parse</param>
+        /// <returns>The enum <typeparamref name="T"/></returns>
+        public static T EnumParse<T>(string stringToEnum)
+        {
+            return (T)Enum.Parse(typeof(T), stringToEnum, true);
+        }
+
+        public static string Num(Recipient recipient) => ((int)recipient).ToString();
     }
 }

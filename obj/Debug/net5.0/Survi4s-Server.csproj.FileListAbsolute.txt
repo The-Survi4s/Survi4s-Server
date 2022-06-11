@@ -21,7 +21,6 @@ C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\bin\Debug\net5.0\Survi4s-S
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.dll
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\bin\Debug\net5.0\ref\Survi4s-Server.dll
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\bin\Debug\net5.0\Survi4s-Server.pdb
-C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.csproj.AssemblyReference.cache
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.AssemblyInfoInputs.cache
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.AssemblyInfo.cs
@@ -30,3 +29,4 @@ C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-S
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\ref\Survi4s-Server.dll
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.pdb
 C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.genruntimeconfig.cache
+C:\Users\Linux Family\Documents\GitHub\Survi4s-Server\obj\Debug\net5.0\Survi4s-Server.csproj.AssemblyReference.cache

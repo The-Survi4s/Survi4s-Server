@@ -81,7 +81,7 @@ namespace Survi4s_Server
                 if (player.myRoom.players.Count > 1)
                 {
                     // Tell others that we left ------------------------------------------
-                    player.SendMessage("3", "LRm");
+                    player.SendMessage(Recipient.AllExceptSender, Subject.LRm);
 
                     // Check if we are the master of room --------------------------------
                     if (player.isMaster)
@@ -92,7 +92,7 @@ namespace Survi4s_Server
                             if (x.tcp != player.tcp)
                             {
                                 x.SetToMaster();
-                                return;
+                                break;
                             }
                         }
                     }
@@ -113,4 +113,87 @@ namespace Survi4s_Server
             }
         }
     }
+
+    #region Type declarations
+    /// <summary>
+    /// Message subject
+    /// </summary>
+    public enum Subject
+    {
+        /// <summary>Server</summary>
+        Svr,
+        /// <summary>Room created</summary>
+        RCrd,
+        /// <summary>Room joined</summary>
+        RJnd,
+        /// <summary>Room not found</summary>
+        RnFd,
+        /// <summary>Room is full</summary>
+        RsF,
+        /// <summary>Exit room</summary>
+        REx,
+        /// <summary>Sync mouse position</summary>
+        MPos,
+        /// <summary>Player count</summary>
+        PlCt,
+        /// <summary>Start game</summary>
+        StGm,
+        /// <summary>Spawn <see cref="Player"/></summary>
+        SpwP,
+        /// <summary>Equip <see cref="WeaponBase"/></summary>
+        EqWp,
+        /// <summary><see cref="Player"/> attack</summary>
+        PAtk,
+        /// <summary>Spawn <see cref="BulletBase"/></summary>
+        SpwB,
+        /// <summary>Modify <see cref="Monster"/> hp</summary>
+        MdMo,
+        /// <summary>Modify <see cref="Player"/> hp</summary>
+        MdPl,
+        /// <summary>Correct <see cref="Player"/> dead position</summary>
+        PlDd,
+        /// <summary>Modify <see cref="Wall"/> hp</summary>
+        MdWl,
+        /// <summary>Spawn <see cref="Monster"/></summary>
+        SpwM,
+        /// <summary>Add <see cref="StatusEffectBase"/> to a <see cref="Monster"/></summary>
+        MoEf,
+        /// <summary><see cref="Monster"/> attack</summary>
+        MAtk,
+        /// <summary>Modify <see cref="Statue"/> hp</summary>
+        MdSt,
+        /// <summary><see cref="Player"/> leave room / disconnect</summary>
+        LRm,
+        /// <summary>Destroy <see cref="BulletBase"/></summary>
+        DBl,
+        /// <summary>Rebuilt <see cref="Wall"/></summary>
+        RbWl,
+        /// <summary>Upgrade <see cref="WeaponBase"/></summary>
+        UpWpn,
+        /// <summary>Sync <see cref="Player"/> velocity</summary>
+        PlVl,
+        /// <summary><see cref="Player"/> jump</summary>
+        PJmp,
+        /// <summary>Change name</summary>
+        ChNm,
+        /// <summary>Game over</summary>
+        GmOv,
+        /// <summary>Sync <see cref="Player"/> position</summary>
+        PlPos,
+        /// <summary>Start Matchmaking</summary>
+        StMtc,
+        /// <summary>Request create room</summary>
+        CrR,
+        /// <summary>Request join room</summary>
+        JnR,
+        /// <summary>Request exit room</summary>
+        ExR,
+        /// <summary>Request lock room</summary>
+        LcR,
+        /// <summary>Set to Master</summary>
+        SeMs
+    }
+
+    public enum Recipient { None, All, Server, AllExceptSender, SpecificPlayer }
+    #endregion
 }
