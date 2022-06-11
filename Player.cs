@@ -17,9 +17,9 @@ namespace Survi4s_Server
         private Server server;
 
         public NetworkStream networkStream { get; private set; }
-        private Room myRoom;
-        private bool isMaster;
-        private bool isOnline;
+        public Room myRoom;
+        public bool isMaster;
+        public bool isOnline;
 
         private int DefaultCheckTime;
         private int checkTime;
@@ -112,7 +112,7 @@ namespace Survi4s_Server
                 Thread.Sleep(DefaultCheckTime);
                 if (checkTime == 0)
                 {
-                    SuddenDisconnect();
+                    server.SuddenDisconnect(this);
                 }
                 else
                 {
@@ -171,7 +171,16 @@ namespace Survi4s_Server
                     }
                     else if (info[0] == "3")
                     {
+                        if (myRoom == null)
+                            return;
 
+                        foreach (Player x in myRoom.players)
+                        {
+                            if (x.tcp != tcp)
+                            {
+                                x.SendMessage(data);
+                            }
+                        }
                     }
                     else
                     {
@@ -193,7 +202,7 @@ namespace Survi4s_Server
         }
 
         // Send Massage method ----------------------------------------------------------
-        private void SendMessage(string target, string massage)
+        public void SendMessage(string target, string massage)
         {
             // Massage format : sender|header|data|data|data...
             // Target code : 1.All  2.Server  3.All except Sender   others:Specific player name
@@ -274,7 +283,7 @@ namespace Survi4s_Server
             {
                 Console.WriteLine("Send massage error from " + player.myId + " " + player.myName + " : " + e.Message);
                 // Disconnect client from server
-                SuddenDisconnect();
+                server.SuddenDisconnect(this);
             }
         }
 
@@ -442,56 +451,6 @@ namespace Survi4s_Server
             myName = Name;
             string[] msg = { "ChNm", Id, Name };
             SendMessage(msg);
-        }
-
-        // Sudden disconnect -----------------------------------------------------
-        private void SuddenDisconnect()
-        {
-            isOnline = false;
-
-            // Check client position
-            if (state == PlayerState.online)
-            {
-                // Remove from online list
-                server.onlineList.Remove(this);
-
-                // Print Massage
-                Console.WriteLine(myId + " " + myName + " Disconnected");
-            }
-            else if (state == PlayerState.room)
-            {
-                // Check there is other players in room ----------------------------------
-                if (myRoom.players.Count > 1)
-                {
-                    // Tell others that we left ------------------------------------------
-                    SendMessage("3", "LRm");
-
-                    // Check if we are the master of room --------------------------------
-                    if (isMaster)
-                    {
-                        // Set other player to master ------------------------------------
-                        foreach (Player x in myRoom.players)
-                        {
-                            if (x.tcp != tcp)
-                            {
-                                x.SetToMaster();
-                                return;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    server.roomList.Remove(myRoom);
-                }
-
-                isMaster = false;
-                myRoom.players.Remove(this);
-                myRoom = null;
-
-                // Print Massage
-                Console.WriteLine(myId + " " + myName + " Disconnected");
-            }
         }
 
         // Set this player to master of room -------------------------------------
