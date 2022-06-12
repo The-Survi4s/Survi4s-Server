@@ -56,7 +56,7 @@ namespace Survi4s_Server
                 TcpClient client = serverListener.AcceptTcpClient();
 
                 // Make a new class to handle client
-                Player player = new Player(client, this);
+                Player player = new(client, this);
             }
         }
 

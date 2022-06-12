@@ -136,6 +136,7 @@ namespace Survi4s_Server
                     BinaryFormatter formatter = new BinaryFormatter();
                     string data = formatter.Deserialize(networkStream) as string;
                     string[] info = data.Split("|");
+                    Console.WriteLine("Receive:" + myName + "|" + data.Trim('\0'));
                     if (info[1] == "A")
                     {
                         checkTime = DefaultCheckTime;
@@ -172,11 +173,7 @@ namespace Survi4s_Server
                             break;
                         case Recipient.AllExceptSender:
                             {
-                                if (myRoom == null) return;
-                                foreach (Player x in myRoom.players.Where(x => x.tcp != tcp))
-                                {
-                                    x.SendMessage(info);
-                                }
+                                SendMessage(Recipient.AllExceptSender, data[2..]);
                                 break;
                             }
                         default:
@@ -320,7 +317,7 @@ namespace Survi4s_Server
             // Try to send, if fails, let's just assume player disconnected ------------------
             try
             {
-                //Console.WriteLine("Send:" + data);
+                Console.WriteLine("Send:" + data);
                 BinaryFormatter formatter = new BinaryFormatter();
                 formatter.Serialize(player.networkStream, data);
             }
@@ -464,7 +461,7 @@ namespace Survi4s_Server
                         if (x.tcp != tcp)
                         {
                             x.SetToMaster();
-                            return;
+                            break;
                         }
                     }
                 }
