@@ -230,29 +230,50 @@ namespace Survi4s_Server
             {
                 if (target == Num(Recipient.All))
                 {
-                    foreach (Player x in myRoom.players)
+                    try
                     {
-                        SendSerializationDataHandler(x, data);
+                        foreach (Player x in myRoom.players)
+                        {
+                            SendSerializationDataHandler(x, data);
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine("Error Player.cs : " + e);
                     }
                 }
                 else if (target == Num(Recipient.AllExceptSender))
                 {
-                    foreach (Player x in myRoom.players)
+                    try
                     {
-                        if (x.tcp != tcp)
+                        foreach (Player x in myRoom.players)
                         {
-                            SendSerializationDataHandler(x, data);
+                            if (x.tcp != tcp)
+                            {
+                                SendSerializationDataHandler(x, data);
+                            }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Error Player.cs : " + e);
                     }
                 }
                 else
                 {
-                    foreach (Player x in myRoom.players)
+                    try
                     {
-                        if ((x.myId + x.myName) == (target))
+                        foreach (Player x in myRoom.players)
                         {
-                            SendSerializationDataHandler(x, data);
+                            if ((x.myId + x.myName) == (target))
+                            {
+                                SendSerializationDataHandler(x, data);
+                            }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Error Player.cs : " + e);
                     }
                 }
             }
@@ -332,10 +353,9 @@ namespace Survi4s_Server
         // Matchmaking method ------------------------------------------------------
         private void MatchMaking()
         {
-            // Check if there is room in list --------------------------------------
-            if (server.roomList.Count > 0)
+            try
             {
-                for(int i = 0; i < server.roomList.Count; i++)
+                for (int i = 0; i < server.roomList.Count; i++)
                 {
                     // If we found the room ----------------------------------------
                     if (server.roomList[i].CanJoinPublic())
@@ -362,8 +382,13 @@ namespace Survi4s_Server
                         return;
                     }
                 }
-            }
 
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Error Player.cs : " + e);
+            }
+            
             // Just make new room if there is no room can be joined ----------------
             CreateRoom();
         }

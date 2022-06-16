@@ -86,14 +86,21 @@ namespace Survi4s_Server
                     // Check if we are the master of room --------------------------------
                     if (player.isMaster)
                     {
-                        // Set other player to master ------------------------------------
-                        foreach (Player x in player.myRoom.players)
+                        try
                         {
-                            if (x.tcp != player.tcp)
+                            // Set other player to master ------------------------------------
+                            foreach (Player x in player.myRoom.players)
                             {
-                                x.SetToMaster();
-                                break;
+                                if (x.tcp != player.tcp)
+                                {
+                                    x.SetToMaster();
+                                    break;
+                                }
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Error Server.cs : " + e);
                         }
                     }
                 }
