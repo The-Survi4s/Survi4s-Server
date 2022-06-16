@@ -97,16 +97,12 @@ namespace Survi4s_Server
                         }
                     }
                 }
-                else
-                {
-                    roomList.Remove(player.myRoom);
-                }
-
-                player.tcp.Close();
 
                 player.isMaster = false;
                 player.myRoom.players.Remove(player);
                 player.myRoom = null;
+
+                player.tcp.Close();
 
                 // Print Massage
                 Console.WriteLine(player.myId + " " + player.myName + " Disconnected");

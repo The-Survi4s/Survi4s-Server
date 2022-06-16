@@ -325,7 +325,7 @@ namespace Survi4s_Server
             {
                 Console.WriteLine("Send message error from " + player.myId + " " + player.myName + " : " + e.Message);
                 // Disconnect client from server
-                server.SuddenDisconnect(this);
+                server.SuddenDisconnect(player);
             }
         }
 
